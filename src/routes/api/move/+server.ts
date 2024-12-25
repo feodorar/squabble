@@ -40,7 +40,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	const allAvailableLetters = game.free_letters;
 
 	const numberOfFreeSpots = 7 - letters.length;
-	for (let i = 0; i < numberOfFreeSpots; i++) {
+	for (let i = 0; i < Math.min(numberOfFreeSpots, allAvailableLetters.length); i++) {
 		const letterIndex = Math.floor(Math.random() * allAvailableLetters.length);
 		letters.push(allAvailableLetters[letterIndex]);
 		allAvailableLetters.splice(letterIndex, 1);
