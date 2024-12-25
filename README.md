@@ -1,3 +1,9 @@
+## DB
+
+Prisma:
+Change model on supabase, then `npx prisma db pull` and afterwards `npx prisma generate`.
+If model changed, create new migration with `npx prisma migrate dev --name [name of change]`.
+
 ## Developing
 
 Once you've created a project and installed dependencies with `bun install`, start a development server:

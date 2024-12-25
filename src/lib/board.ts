@@ -1,18 +1,28 @@
+import type { game, move } from '@prisma/client';
+
 export type SpecialTile = 'triple-word' | 'double-word' | 'triple-letter' | 'double-letter';
 export type Tile = {
 	coordinate: Coordinate;
 	special?: SpecialTile;
+	placedLetter?: string;
 };
 export type Coordinate = {
 	x: number;
 	y: number;
 };
+export type MoveRequest = Pick<
+	move,
+	'horizontal' | 'start_x' | 'start_y' | 'word' | 'game_id' | 'player_id'
+>;
+export type MoveResponse = {
+	playerLetters: string[];
+};
 
-export function getBoard(): Tile[] {
+export function getEmptyBoard(): Tile[] {
 	let tiles: Tile[] = [];
-	for (let i = 0; i < 15; i++) {
-		for (let j = 0; j < 15; j++) {
-			const coordinate = { x: i, y: j };
+	for (let y = 0; y < 15; y++) {
+		for (let x = 0; x < 15; x++) {
+			const coordinate = { x, y };
 			tiles.push({ coordinate, special: getSpecial(coordinate) });
 		}
 	}
@@ -54,6 +64,27 @@ const doubleLetterTiles: Coordinate[] = [3, 11]
 		])
 	);
 
+const LETTER_FREQUENCIES = {
+	1: 'JKQXZ',
+	2: 'BCFHMPVWY?',
+	3: 'G',
+	4: 'DLSU',
+	6: 'NRT',
+	8: 'O',
+	9: 'AI',
+	12: 'E'
+};
+
+export function getAllLetters(): string[] {
+	let allLetters: any[] = [];
+	for (let [freq, letters] of Object.entries(LETTER_FREQUENCIES)) {
+		for (let i = 0; i < parseInt(freq); i++) {
+			allLetters.push(...letters.split(''));
+		}
+	}
+	return allLetters;
+}
+
 function getSpecial(coordinate: Coordinate): SpecialTile | undefined {
 	let special: SpecialTile | undefined;
 	if (tripleWordTiles.find((c) => c.x === coordinate.x && c.y === coordinate.y)) {
@@ -69,4 +100,21 @@ function getSpecial(coordinate: Coordinate): SpecialTile | undefined {
 		special = 'double-letter';
 	}
 	return special;
+}
+
+export function constructBoardForGame(moves: move[]): Tile[] {
+	// TODO: also construct score
+	const board = getEmptyBoard();
+	// TODO: optimize algorithm
+	for (let move of moves) {
+		for (let i = 0; i < move.word.length; i++) {
+			const x = move.horizontal ? move.start_x + i : move.start_x;
+			const y = move.horizontal ? move.start_y : move.start_y + i;
+			const tile = board.find((t) => t.coordinate.x == x && t.coordinate.y == y);
+			if (tile && move.word[i] !== '_') {
+				tile.placedLetter = move.word[i];
+			}
+		}
+	}
+	return board;
 }
