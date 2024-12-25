@@ -25,7 +25,7 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	move.word.split('').forEach((letter) => {
 		if (letter !== '_') {
-			const index = player.letters.findIndex((l) => l === letter);
+			const index = letters.findIndex((l) => l === letter);
 			if (index !== -1) {
 				letters.splice(index, 1);
 			}
