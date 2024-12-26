@@ -11,9 +11,13 @@ export const load = async (event) => {
 	if (!game) {
 		throw redirect(404, '/error');
 	}
-	const player = await prisma.player.findFirst({
-		where: { game_id: game.id, user_id: user.id }
+	const players = await prisma.player.findMany({
+		where: { game_id: game.id },
+		include: {
+			user: true
+		}
 	});
+	const player = players.find((player) => player.user_id === user.id);
 
 	if (!player) {
 		throw redirect(303, `/game/${event.params.uuid}/enter`);
@@ -26,5 +30,5 @@ export const load = async (event) => {
 	if (!moves) {
 		throw redirect(404, '/error');
 	}
-	return { game, player, moves };
+	return { game, player, moves, players };
 };

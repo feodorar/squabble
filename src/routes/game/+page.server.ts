@@ -14,7 +14,7 @@ export const load = async (event) => {
 			}
 		}
 	});
-	return { user, games };
+	return { user, games: games.sort((g1, g2) => g2.created_at.valueOf() - g1.created_at.valueOf()) };
 };
 
 export const actions = {

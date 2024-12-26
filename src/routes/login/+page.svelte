@@ -8,7 +8,7 @@
 </script>
 
 {#if form?.success}
-	<div>Check your inbox</div>
+	<div class="m-4 flex flex-col items-center">Check your inbox</div>
 {:else}
 	<form method="POST" class="m-4 flex flex-col items-center gap-4">
 		<h1 class="text-xl">Login</h1>
