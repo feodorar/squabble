@@ -3,6 +3,7 @@
 
 	import {
 		constructBoardForGame,
+		getLetterValue,
 		type MoveRequest,
 		type MoveResponse,
 		type Tile
@@ -23,6 +24,7 @@
 		}
 		const letter = playerLetters[selectedLetterIndex];
 		tile.placedLetter = letter;
+		tile.placedLetterBaseValue = getLetterValue(letter);
 		placedLetters.push({ letterIndex: selectedLetterIndex, tile });
 		selectedLetterIndex = undefined;
 		placedLetters = placedLetters;
@@ -40,6 +42,7 @@
 			const tile = board.find((t) => t === l.tile);
 			if (tile) {
 				tile.placedLetter = undefined;
+				tile.placedLetterBaseValue = undefined;
 			}
 		});
 		placedLetters = [];
@@ -116,34 +119,8 @@
 		{/each}
 
 		<div class="mb-4 mt-2 text-sm">To invite more players, just send them the current url.</div>
-		<div class="my-4 mt-auto flex w-full flex-wrap justify-center">
-			<div class="mb-4 flex justify-center gap-4 bg-green-800 px-4 py-2">
-				{#each playerLetters as letter, index}
-					<button
-						class="flex h-4 w-4 items-center justify-center sm:h-6 sm:w-6 md:h-9 md:w-9"
-						class:border={selectedLetterIndex == index}
-						class:bg-white={selectedLetterIndex != index}
-						class:bg-black={selectedLetterIndex == index}
-						class:text-white={selectedLetterIndex == index}
-						class:opacity-25={!!placedLetters.find((l) => l.letterIndex === index)}
-						disabled={!!placedLetters.find((l) => l.letterIndex === index)}
-						on:click={() => selectLetter(index)}
-					>
-						{letter.toUpperCase()}
-					</button>
-				{/each}
-			</div>
-			<div class="flex w-full justify-center">
-				<button class="mr-4 rounded-full bg-cyan-400 p-2 sm:p-4" on:click={submitMove}
-					>Submit move</button
-				>
-				<button class="rounded-full border p-2 sm:p-4" on:click={resetMove}>Reset move</button>
-			</div>
-		</div>
 	</div>
-	<div
-		class="flex aspect-square w-full flex-col items-center justify-center lg:mx-auto lg:h-full lg:w-auto"
-	>
+	<div class="flex aspect-square w-full flex-col items-center justify-center lg:h-full lg:w-auto">
 		<div class="board grid w-full gap-1">
 			{#each board as tile}
 				<button
@@ -156,9 +133,12 @@
 				>
 					{#if tile.placedLetter}
 						<div
-							class="m-0.25 flex aspect-square w-full items-center justify-center bg-white sm:m-0.5 xl:text-xl 2xl:text-2xl"
+							class="m-0.25 relative flex aspect-square w-full items-center justify-center bg-white sm:m-0.5 xl:text-xl 2xl:text-2xl"
 						>
 							{tile.placedLetter.toUpperCase()}
+							<div class="absolute bottom-0 right-0 mr-0.5 text-xs">
+								{tile.placedLetterBaseValue}
+							</div>
 						</div>
 					{/if}
 				</button>
@@ -166,9 +146,54 @@
 		</div>
 	</div>
 </div>
+<div class="bottom-bar fixed bottom-0 left-0 grid min-h-12 w-full gap-4 bg-green-800 p-3">
+	<button class="resetBtn mr-auto rounded-full bg-white p-2 text-black" on:click={resetMove}>
+		Reset move
+	</button>
+	<div class="letters flex justify-center gap-3">
+		{#each playerLetters as letter, index}
+			<button
+				class="relative flex aspect-square h-9 items-center justify-center md:h-12"
+				class:border={selectedLetterIndex == index}
+				class:bg-white={selectedLetterIndex != index}
+				class:bg-black={selectedLetterIndex == index}
+				class:text-white={selectedLetterIndex == index}
+				class:opacity-25={!!placedLetters.find((l) => l.letterIndex === index)}
+				disabled={!!placedLetters.find((l) => l.letterIndex === index)}
+				on:click={() => selectLetter(index)}
+			>
+				{letter.toUpperCase()}
+				<div class="absolute bottom-0 right-0 mr-0.5 text-xs">{getLetterValue(letter)}</div>
+			</button>
+		{/each}
+	</div>
+
+	<button class="submitBtn ml-auto rounded-full bg-cyan-400 p-2" on:click={submitMove}>
+		Submit move
+	</button>
+</div>
 
 <style>
 	.board {
 		grid-template-columns: repeat(15, 1fr);
+	}
+	.bottom-bar {
+		grid-template-areas:
+			'letters letters'
+			'resetBtn submitBtn';
+
+		@media only screen and (min-width: 600px) {
+			grid-template-areas: 'resetBtn letters submitBtn';
+		}
+	}
+
+	.letters {
+		grid-area: letters;
+	}
+	.resetBtn {
+		grid-area: resetBtn;
+	}
+	.submitBtn {
+		grid-area: submitBtn;
 	}
 </style>

@@ -7,7 +7,7 @@
 		<a href="/game">Home</a>
 		<div class="text-xl">Squabble</div>
 	</div>
-	<div class="m-4 flex h-[calc(100vh-5rem)] flex-col">
+	<div class="m-4 flex h-[calc(100vh-9.5rem)] flex-col">
 		<slot />
 	</div>
 </div>

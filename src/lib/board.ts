@@ -5,6 +5,7 @@ export type Tile = {
 	coordinate: Coordinate;
 	special?: SpecialTile;
 	placedLetter?: string;
+	placedLetterBaseValue?: number;
 };
 export type Coordinate = {
 	x: number;
@@ -75,6 +76,25 @@ const LETTER_FREQUENCIES = {
 	12: 'E'
 };
 
+const LETTER_VALUES = {
+	1: 'LSNRTOAIE',
+	2: 'GD',
+	3: 'BCMP',
+	4: 'FHVWY',
+	5: 'K',
+	8: 'JX',
+	10: 'QZ'
+};
+
+export function getLetterValue(letter: string): number {
+	for (let [value, letters] of Object.entries(LETTER_VALUES)) {
+		if (letters.includes(letter)) {
+			return +value;
+		}
+	}
+	return 0;
+}
+
 export function getAllLetters(): string[] {
 	let allLetters: any[] = [];
 	for (let [freq, letters] of Object.entries(LETTER_FREQUENCIES)) {
@@ -113,6 +133,7 @@ export function constructBoardForGame(moves: move[]): Tile[] {
 			const tile = board.find((t) => t.coordinate.x == x && t.coordinate.y == y);
 			if (tile && move.word[i] !== '_') {
 				tile.placedLetter = move.word[i];
+				tile.placedLetterBaseValue = getLetterValue(tile.placedLetter);
 			}
 		}
 	}
