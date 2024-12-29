@@ -1,6 +1,7 @@
 import { redirect } from '@sveltejs/kit';
 import { prisma } from '../../../lib/db';
 import { getUserFromSessionOrRedirect } from '$lib/user';
+import { constructBoardAndScoresForGame } from '$lib/board';
 
 export const load = async (event) => {
 	const user = await getUserFromSessionOrRedirect(event);
@@ -30,5 +31,6 @@ export const load = async (event) => {
 	if (!moves) {
 		throw redirect(404, '/error');
 	}
-	return { game, player, moves, players };
+	let { board, scores } = constructBoardAndScoresForGame(moves);
+	return { game, player, players, board, scores };
 };

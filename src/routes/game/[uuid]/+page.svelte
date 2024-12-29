@@ -1,15 +1,12 @@
 <script lang="ts">
+	import { invalidateAll } from '$app/navigation';
+
 	export let data;
 
-	import {
-		constructBoardAndScoresForGame,
-		getLetterValue,
-		type MoveRequest,
-		type MoveResponse,
-		type Tile
-	} from '$lib/board';
+	import { getLetterValue, type MoveRequest, type MoveResponse, type Tile } from '$lib/board';
 
-	let { board, scores } = constructBoardAndScoresForGame(data.moves);
+	let board = data.board;
+	$: scores = data.scores;
 	let selectedLetterIndex: number | undefined;
 	let placedLetters: { letterIndex: number; tile: Tile }[] = [];
 	let moveScore = 0; // TODO
@@ -105,6 +102,9 @@
 
 		placedLetters = [];
 		playerLetters = result.playerLetters;
+
+		invalidateAll(); // TODO: only invalidate this? Maybe change to form action, which would trigger reload
+		scores = scores;
 	}
 </script>
 
