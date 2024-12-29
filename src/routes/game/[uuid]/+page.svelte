@@ -2,14 +2,14 @@
 	export let data;
 
 	import {
-		constructBoardForGame,
+		constructBoardAndScoresForGame,
 		getLetterValue,
 		type MoveRequest,
 		type MoveResponse,
 		type Tile
 	} from '$lib/board';
 
-	let board = constructBoardForGame(data.moves);
+	let { board, scores } = constructBoardAndScoresForGame(data.moves);
 	let selectedLetterIndex: number | undefined;
 	let placedLetters: { letterIndex: number; tile: Tile }[] = [];
 	let moveScore = 0; // TODO
@@ -115,7 +115,7 @@
 
 		<div class="mt-4 font-bold">Players:</div>
 		{#each data.players as player}
-			<div>{player.user.name}</div>
+			<div>{player.user.name}: {scores.get(player.id) ?? 0}</div>
 		{/each}
 
 		<div class="mb-4 mt-2 text-sm">To invite more players, just send them the current url.</div>
@@ -136,6 +136,7 @@
 							class="m-0.25 relative flex aspect-square w-full items-center justify-center bg-white sm:m-0.5 xl:text-xl 2xl:text-2xl"
 						>
 							{tile.placedLetter.toUpperCase()}
+
 							<div class="absolute bottom-0 right-0 mr-0.5 text-xs">
 								{tile.placedLetterBaseValue}
 							</div>

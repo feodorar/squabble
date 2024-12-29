@@ -77,7 +77,7 @@ const LETTER_FREQUENCIES = {
 };
 
 const LETTER_VALUES = {
-	1: 'LSNRTOAIE',
+	1: 'LSUNRTOAIE',
 	2: 'GD',
 	3: 'BCMP',
 	4: 'FHVWY',
@@ -122,20 +122,175 @@ function getSpecial(coordinate: Coordinate): SpecialTile | undefined {
 	return special;
 }
 
-export function constructBoardForGame(moves: move[]): Tile[] {
-	// TODO: also construct score
+export function constructBoardAndScoresForGame(moves: move[]): {
+	board: Tile[];
+	scores: Map<string, number>;
+} {
+	const scores = new Map<string, number>();
 	const board = getEmptyBoard();
-	// TODO: optimize algorithm
+
+	// TODO: optimize algorithms
 	for (let move of moves) {
-		for (let i = 0; i < move.word.length; i++) {
-			const x = move.horizontal ? move.start_x + i : move.start_x;
-			const y = move.horizontal ? move.start_y : move.start_y + i;
-			const tile = board.find((t) => t.coordinate.x == x && t.coordinate.y == y);
-			if (tile && move.word[i] !== '_') {
-				tile.placedLetter = move.word[i];
-				tile.placedLetterBaseValue = getLetterValue(tile.placedLetter);
+		const placedTiles = placeLettersOfMoveOnBoard(board, move);
+		const wordsInMove = getWordsForMove(board, move);
+		let moveScore = 0;
+		for (let word of wordsInMove) {
+			moveScore += getScoreOfWord(word, placedTiles);
+		}
+		const player_id = move.player_id;
+		scores.set(player_id, (scores.get(player_id) ?? 0) + moveScore);
+		// console.log('Move', move.word, 'player', player_id, 'score', moveScore);
+	}
+	return { board, scores };
+}
+
+function getScoreOfWord(word: Tile[], newlyPlacedTiles: Tile[]): number {
+	let score = 0;
+	let wordMultiplier = 1;
+
+	for (let tile of word) {
+		let letterMultiplier = 1;
+
+		if (includesTile(newlyPlacedTiles, tile)) {
+			if (tile.special === 'double-word') {
+				wordMultiplier *= 2;
+			}
+
+			if (tile.special === 'triple-word') {
+				wordMultiplier *= 3;
+			}
+
+			if (tile.special === 'double-letter') {
+				letterMultiplier = 2;
+			}
+
+			if (tile.special === 'triple-letter') {
+				letterMultiplier = 3;
 			}
 		}
+		score += tile?.placedLetterBaseValue ? tile.placedLetterBaseValue * letterMultiplier : 0;
 	}
-	return board;
+
+	return score * wordMultiplier;
+}
+
+function includesTile(tiles: Tile[], tile: Tile): boolean {
+	return tiles.some(
+		(t) => t.coordinate.x === tile.coordinate.x && t.coordinate.y === tile.coordinate.y
+	);
+}
+
+function placeLettersOfMoveOnBoard(board: Tile[], move: move): Tile[] {
+	const tiles = [];
+	for (let i = 0; i < move.word.length; i++) {
+		const x = move.horizontal ? move.start_x + i : move.start_x;
+		const y = move.horizontal ? move.start_y : move.start_y + i;
+		const tile = board.find((t) => t.coordinate.x == x && t.coordinate.y == y);
+		const letter = move.word[i];
+		if (tile && letter !== '_') {
+			tile.placedLetter = letter;
+			tile.placedLetterBaseValue = getLetterValue(letter);
+			tiles.push(tile);
+		}
+	}
+
+	return tiles;
+}
+
+function getWordsForMove(board: Tile[], move: move): Tile[][] {
+	const wordsInMove: Tile[][] = [];
+
+	let moveStart = move.horizontal ? move.start_x : move.start_y;
+	let moveEnd = moveStart + move.word.length - 1;
+
+	// travers to find the complete primary word
+	const tilesOfPrimaryWord = findCompleteWord(
+		board,
+		move.horizontal,
+		moveStart,
+		moveEnd,
+		move.horizontal ? move.start_y : move.start_x
+	);
+	wordsInMove.push(tilesOfPrimaryWord);
+
+	// travers to find find all secondary words
+	for (let i = moveStart; i <= moveEnd; i++) {
+		const tile = board.find((tile) =>
+			move.horizontal
+				? tile.coordinate.x === i && tile.coordinate.y === move.start_y
+				: tile.coordinate.y === i && tile.coordinate.x === move.start_x
+		);
+
+		const letter = move.word[i - moveStart];
+		if (tile && letter !== '_') {
+			const fixedDimensionIndex = move.horizontal ? tile.coordinate.x : tile.coordinate.y;
+			const traversalDimensionStartIndex = move.horizontal ? tile.coordinate.y : tile.coordinate.x;
+
+			const tilesOfSecondaryWord = findCompleteWord(
+				board,
+				!move.horizontal,
+				traversalDimensionStartIndex,
+				traversalDimensionStartIndex,
+				fixedDimensionIndex
+			);
+
+			wordsInMove.push(tilesOfSecondaryWord);
+		}
+	}
+
+	return wordsInMove;
+}
+
+function findCompleteWord(
+	board: Tile[],
+	traverseHorizontal: boolean,
+	primaryDimensionMinIncl: number,
+	primaryDimensionMaxIncl: number,
+	fixedDimensionIndex: number
+): Tile[] {
+	// travers left/above of word until no placed letter
+	let completeWordStartIncl = primaryDimensionMinIncl;
+	for (let i = primaryDimensionMinIncl - 1; i >= 0; i--) {
+		const connectedLetterTile = board.find((t) =>
+			traverseHorizontal
+				? t.coordinate.x == i && t.coordinate.y == fixedDimensionIndex
+				: t.coordinate.y == i && t.coordinate.x == fixedDimensionIndex
+		);
+		if (connectedLetterTile?.placedLetter) {
+			completeWordStartIncl = i;
+		} else {
+			break;
+		}
+	}
+
+	// travers right/below of word until no placed letter
+	let completeWordEndIncl = primaryDimensionMaxIncl;
+	for (let i = primaryDimensionMaxIncl + 1; i < 15; i++) {
+		const connectedLetterTile = board.find((t) =>
+			traverseHorizontal
+				? t.coordinate.x == i && t.coordinate.y == fixedDimensionIndex
+				: t.coordinate.y == i && t.coordinate.x == fixedDimensionIndex
+		);
+		if (connectedLetterTile?.placedLetter) {
+			completeWordEndIncl = i;
+		} else {
+			break;
+		}
+	}
+
+	const tilesOfCompleteWord: Tile[] = [];
+
+	for (let i = completeWordStartIncl; i <= completeWordEndIncl; i++) {
+		const tile = board.find((tile) =>
+			traverseHorizontal
+				? tile.coordinate.x === i && tile.coordinate.y === fixedDimensionIndex
+				: tile.coordinate.y === i && tile.coordinate.x === fixedDimensionIndex
+		);
+		if (tile) {
+			tilesOfCompleteWord.push(tile);
+		}
+	}
+
+	tilesOfCompleteWord.length < 2;
+	return tilesOfCompleteWord.length < 2 ? [] : tilesOfCompleteWord;
 }
