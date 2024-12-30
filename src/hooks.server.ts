@@ -1,7 +1,6 @@
 import { redirect, type Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { createServerClient } from '@supabase/ssr';
-// import { PUBLIC_SUPABASE_ANON_KEY, PUBLIC_SUPABASE_URL } from '$env/dynamic/public';
 import { env } from '$env/dynamic/public';
 import { getUserFromSessionOrRedirect } from '$lib/user';
 

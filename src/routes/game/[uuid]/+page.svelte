@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { invalidateAll } from '$app/navigation';
+	import { getLetterValue, type MoveRequest, type MoveResponse, type Tile } from '$lib/board';
+	import { onMount } from 'svelte';
+	import { env } from '$env/dynamic/public';
+	import { createClient } from '@supabase/supabase-js';
 
 	export let data;
-
-	import { getLetterValue, type MoveRequest, type MoveResponse, type Tile } from '$lib/board';
 
 	let board = data.board;
 	$: scores = data.scores;
@@ -11,6 +13,30 @@
 	let placedLetters: { letterIndex: number; tile: Tile }[] = [];
 	let moveScore = 0; // TODO
 	let playerLetters = data.player.letters;
+
+	onMount(() => {
+		const supabaseClient = createClient(env.PUBLIC_SUPABASE_URL, env.PUBLIC_SUPABASE_ANON_KEY);
+		supabaseClient
+			.channel('public:move')
+			.on(
+				'postgres_changes',
+				{
+					event: 'INSERT',
+					schema: 'public',
+					table: 'move'
+					// filter: `game_id=eq.${gameId}` // Only listen to changes where game_id matches
+				},
+				(payload) => {
+					console.log('Relevant move received:', payload);
+					// Update your game state here
+					invalidateAll(); // TODO: only invalidate this? Maybe change to form action, which would trigger reload
+					scores = scores;
+				}
+			)
+			.subscribe((update) => {
+				console.log(update);
+			});
+	});
 
 	function selectTile(tile: Tile): void {
 		if (tile.placedLetter) {
@@ -103,8 +129,8 @@
 		placedLetters = [];
 		playerLetters = result.playerLetters;
 
-		invalidateAll(); // TODO: only invalidate this? Maybe change to form action, which would trigger reload
-		scores = scores;
+		// invalidateAll(); // TODO: only invalidate this? Maybe change to form action, which would trigger reload
+		// scores = scores;
 	}
 </script>
 
