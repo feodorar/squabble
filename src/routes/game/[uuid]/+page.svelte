@@ -7,13 +7,14 @@
 
 	export let data;
 
-	let board = data.board;
+	$: board = data.board;
 	$: scores = data.scores;
 	let selectedLetterIndex: number | undefined;
 	let placedLetters: { letterIndex: number; tile: Tile }[] = [];
 	let moveScore = 0; // TODO
 	let playerLetters = data.player.letters;
 
+	// TODO: rerun, hwne game id changes. cancel old usbscription and then create new
 	onMount(() => {
 		const supabaseClient = createClient(env.PUBLIC_SUPABASE_URL, env.PUBLIC_SUPABASE_ANON_KEY);
 		supabaseClient
@@ -26,17 +27,21 @@
 					table: 'move'
 					// filter: `game_id=eq.${gameId}` // Only listen to changes where game_id matches
 				},
-				(payload) => {
-					console.log('Relevant move received:', payload);
-					// Update your game state here
-					invalidateAll(); // TODO: only invalidate this? Maybe change to form action, which would trigger reload
-					scores = scores;
+				(_) => {
+					reloadBoardAndScores();
 				}
 			)
 			.subscribe((update) => {
 				console.log(update);
 			});
 	});
+
+	function reloadBoardAndScores() {
+		// TODO: only invalidate this page? Maybe change to form action, which would trigger reload
+		invalidateAll();
+		scores = scores;
+		board = board;
+	}
 
 	function selectTile(tile: Tile): void {
 		if (tile.placedLetter) {
