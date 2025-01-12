@@ -174,7 +174,7 @@
 				>
 					{#if tile.placedLetter}
 						<div
-							class="m-0.25 relative flex aspect-square w-full items-center justify-center bg-white text-sm sm:m-0.5 xl:text-xl 2xl:text-2xl"
+							class="relative m-[1px] flex aspect-square w-full items-center justify-center bg-white text-sm sm:m-0.5 xl:text-xl 2xl:text-2xl"
 						>
 							{tile.placedLetter.toUpperCase()}
 
