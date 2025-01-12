@@ -9,21 +9,35 @@ export const POST: RequestHandler = async ({ request }) => {
 
 	// TODO: validate move
 
-	const savedMove = await prisma.move.create({
-		data: {
-			...move
-		}
-	});
-
 	const player = await prisma.player.findUnique({ where: { id: move.player_id } });
 
 	if (!player) {
 		return json({}, { status: 500 }); // TODO: handle error
 	}
 
+	const game = await prisma.game.findUnique({
+		where: { id: move.game_id },
+		include: { player: true }
+	});
+
+	if (!game) {
+		return json({}, { status: 500 }); // TODO: handle error
+	}
+
+	if (game.current_player_index !== player.order_index) {
+		return json({}, { status: 500 }); // TODO: handle error
+	}
+
+	// TODO: transactional
+	const savedMove = await prisma.move.create({
+		data: {
+			...move
+		}
+	});
+
 	let letters = player.letters;
 
-	move.word.split('').forEach((letter) => {
+	savedMove.word.split('').forEach((letter) => {
 		if (letter !== '_') {
 			const index = letters.findIndex((l) => l === letter);
 			if (index !== -1) {
@@ -31,11 +45,6 @@ export const POST: RequestHandler = async ({ request }) => {
 			}
 		}
 	});
-
-	const game = await prisma.game.findUnique({ where: { id: move.game_id } });
-	if (!game) {
-		return json({}, { status: 500 }); // TODO: handle error
-	}
 
 	const allAvailableLetters = game.free_letters;
 
@@ -46,16 +55,20 @@ export const POST: RequestHandler = async ({ request }) => {
 		allAvailableLetters.splice(letterIndex, 1);
 	}
 
-	// TODO: transactional
 	await prisma.player.update({
 		where: {
 			id: player.id
 		},
 		data: { letters: letters }
 	});
+
+	let nextPlayerIndex = player.order_index + 1;
+	if (nextPlayerIndex > game.player.length) {
+		nextPlayerIndex = 0;
+	}
 	await prisma.game.update({
 		where: { id: game.id },
-		data: { free_letters: allAvailableLetters }
+		data: { free_letters: allAvailableLetters, current_player_index: nextPlayerIndex }
 	});
 
 	return json({ playerLetters: letters }, { status: 200 });

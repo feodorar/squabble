@@ -6,7 +6,8 @@ export const actions = {
 	default: async (event) => {
 		const user = await getUserFromSessionOrRedirect(event);
 		const game = await prisma.game.findUnique({
-			where: { id: event.params.uuid }
+			where: { id: event.params.uuid },
+			include: { player: true }
 		});
 		if (!game) {
 			throw redirect(303, '/error');
@@ -36,7 +37,8 @@ export const actions = {
 			data: {
 				game_id: game.id,
 				user_id: user.id,
-				letters: playerLetters
+				letters: playerLetters,
+				order_index: game.player.length ?? 0
 			}
 		});
 

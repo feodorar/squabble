@@ -141,15 +141,25 @@
 
 <div class="flex h-full flex-col gap-4 lg:flex-row">
 	<div class="flex w-full flex-col">
-		<div class="font-bold">Created at:</div>
-		<div>{data.game.created_at.toUTCString()}</div>
+		<div class="mb-2 font-bold">Players*:</div>
+		<table class="d-block max-w-96">
+			{#each data.players as player}
+				<tr class:text-cyan-900={player.order_index === data.game.current_player_index}>
+					<td>{player.order_index + 1}</td>
+					<td>{player.user.name}</td>
+					<td><span class="font-bold">{scores.get(player.id) ?? 0}</span></td>
+					<td>
+						{#if player.order_index === data.game.current_player_index}
+							(their turn)
+						{/if}
+					</td>
+				</tr>
+			{/each}
+		</table>
 
-		<div class="mt-4 font-bold">Players:</div>
-		{#each data.players as player}
-			<div>{player.user.name}: {scores.get(player.id) ?? 0}</div>
-		{/each}
-
-		<div class="mb-4 mt-2 text-sm">To invite more players, just send them the current url.</div>
+		<div class="mb-4 mt-2 text-xs lg:mt-auto">
+			*To invite more players, just send them the current url.
+		</div>
 	</div>
 	<div class="flex aspect-square w-full flex-col items-center justify-center lg:h-full lg:w-auto">
 		<div class="board grid w-full gap-px">
@@ -179,7 +189,11 @@
 	</div>
 </div>
 <div class="bottom-bar fixed bottom-0 left-0 grid min-h-12 w-full gap-4 bg-green-800 p-3">
-	<button class="resetBtn mr-auto rounded-full bg-white p-2 text-black" on:click={resetMove}>
+	<button
+		class="resetBtn mr-auto rounded-full bg-white p-2 text-black disabled:cursor-not-allowed disabled:bg-gray-400"
+		disabled={placedLetters.length === 0}
+		on:click={resetMove}
+	>
 		Reset move
 	</button>
 	<div class="letters flex justify-center gap-3">
@@ -200,7 +214,11 @@
 		{/each}
 	</div>
 
-	<button class="submitBtn ml-auto rounded-full bg-cyan-400 p-2" on:click={submitMove}>
+	<button
+		class="submitBtn ml-auto rounded-full bg-cyan-400 p-2 disabled:cursor-not-allowed disabled:bg-gray-400"
+		disabled={data.player.order_index !== data.game.current_player_index}
+		on:click={submitMove}
+	>
 		Submit move
 	</button>
 </div>

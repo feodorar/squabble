@@ -32,5 +32,11 @@ export const load = async (event) => {
 		throw redirect(404, '/error');
 	}
 	let { board, scores } = constructBoardAndScoresForGame(moves);
-	return { game, player, players, board, scores };
+	return {
+		game,
+		player,
+		players: players.sort((p1, p2) => p1.order_index - p2.order_index),
+		board,
+		scores
+	};
 };

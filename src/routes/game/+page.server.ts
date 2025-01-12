@@ -36,7 +36,8 @@ export const actions = {
 			data: {
 				game_id: game.id,
 				user_id: user.id,
-				letters: playerLetters
+				letters: playerLetters,
+				order_index: 0
 			}
 		});
 
