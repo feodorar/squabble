@@ -63,7 +63,7 @@ export const POST: RequestHandler = async ({ request }) => {
 	});
 
 	let nextPlayerIndex = player.order_index + 1;
-	if (nextPlayerIndex > game.player.length) {
+	if (nextPlayerIndex >= game.player.length) {
 		nextPlayerIndex = 0;
 	}
 	await prisma.game.update({

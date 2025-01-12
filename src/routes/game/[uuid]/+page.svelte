@@ -150,7 +150,7 @@
 					<td><span class="font-bold">{scores.get(player.id) ?? 0}</span></td>
 					<td>
 						{#if player.order_index === data.game.current_player_index}
-							(their turn)
+							({data.player.id === player.id ? 'your' : 'their'} turn)
 						{/if}
 					</td>
 				</tr>
