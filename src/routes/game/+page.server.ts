@@ -1,4 +1,4 @@
-import { getAllLetters } from '$lib/board';
+import { constructBoardAndScoresForGame, getAllLetters } from '$lib/board';
 import { prisma } from '$lib/db';
 import { getUserFromSessionOrRedirect } from '$lib/user';
 import { redirect, type Actions } from '@sveltejs/kit';
@@ -12,9 +12,18 @@ export const load = async (event) => {
 					user_id: user.id
 				}
 			}
+		},
+		include: {
+			player: true,
+			move: true
 		}
 	});
-	return { user, games: games.sort((g1, g2) => g2.created_at.valueOf() - g1.created_at.valueOf()) };
+	return {
+		user,
+		games: games
+			.sort((g1, g2) => g2.created_at.valueOf() - g1.created_at.valueOf())
+			.map((game) => ({ ...game, board: constructBoardAndScoresForGame(game.move) }))
+	};
 };
 
 export const actions = {
