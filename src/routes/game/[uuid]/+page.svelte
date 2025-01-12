@@ -152,7 +152,7 @@
 		<div class="mb-4 mt-2 text-sm">To invite more players, just send them the current url.</div>
 	</div>
 	<div class="flex aspect-square w-full flex-col items-center justify-center lg:h-full lg:w-auto">
-		<div class="board grid w-full gap-1">
+		<div class="board grid w-full gap-px">
 			{#each board as tile}
 				<button
 					class="w-1/15 lg:h-1/15 flex aspect-square items-center justify-center bg-amber-100 hover:brightness-90 lg:w-auto"
@@ -164,11 +164,11 @@
 				>
 					{#if tile.placedLetter}
 						<div
-							class="m-0.25 relative flex aspect-square w-full items-center justify-center bg-white sm:m-0.5 xl:text-xl 2xl:text-2xl"
+							class="m-0.25 relative flex aspect-square w-full items-center justify-center bg-white text-sm sm:m-0.5 xl:text-xl 2xl:text-2xl"
 						>
 							{tile.placedLetter.toUpperCase()}
 
-							<div class="absolute bottom-0 right-0 mr-0.5 text-xs">
+							<div class="absolute bottom-0 right-0 mr-0.5 text-[8px]/[10px] sm:text-xs">
 								{tile.placedLetterBaseValue}
 							</div>
 						</div>
