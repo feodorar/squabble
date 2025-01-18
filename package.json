@@ -41,6 +41,7 @@
 	},
 	"type": "module",
 	"dependencies": {
+		"@nolanx/svelte-onesignal": "^2.0.5",
 		"@prisma/client": "^5.21.1",
 		"@supabase/ssr": "^0.5.2",
 		"@supabase/supabase-js": "^2.47.10",
