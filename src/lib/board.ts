@@ -128,6 +128,7 @@ export function constructBoardAndScoresForGame(moves: move[]): {
 } {
 	const scores = new Map<string, number>();
 	const board = getEmptyBoard();
+	moves.sort((m1, m2) => m1.created_at.valueOf() - m2.created_at.valueOf());
 
 	// TODO: optimize algorithms
 	for (let move of moves) {
