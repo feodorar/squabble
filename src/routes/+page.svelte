@@ -8,6 +8,8 @@
 			enable: true
 		},
 		allowLocalhostAsSecureOrigin: true
+	}).then(() => {
+		console.log('initialized OneSignal');
 	});
 
 	OneSignal.on('subscriptionChange', async (isSubscribed) => {
