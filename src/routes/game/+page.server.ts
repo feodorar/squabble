@@ -22,7 +22,10 @@ export const load = async (event) => {
 		user,
 		games: games
 			.sort((g1, g2) => g2.created_at.valueOf() - g1.created_at.valueOf())
-			.map((game) => ({ ...game, board: constructBoardAndScoresForGame(game.move) }))
+			.map((game) => ({
+				...game,
+				board: constructBoardAndScoresForGame(game.move, game.player, game.is_finished)
+			}))
 	};
 };
 

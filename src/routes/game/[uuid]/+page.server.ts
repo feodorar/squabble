@@ -31,12 +31,13 @@ export const load = async (event) => {
 	if (!moves) {
 		throw redirect(404, '/error');
 	}
-	let { board, scores } = constructBoardAndScoresForGame(moves);
+	let { board, scores } = constructBoardAndScoresForGame(moves, players, game.is_finished);
 	return {
 		game,
 		player,
 		players: players.sort((p1, p2) => p1.order_index - p2.order_index),
 		board,
-		scores
+		scores,
+		maxScore: Math.max(...Array.from(scores.values()))
 	};
 };

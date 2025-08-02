@@ -78,6 +78,30 @@
 		board = board;
 	}
 
+	async function passMove(): Promise<void> {
+		const move: MoveRequest = {
+			game_id: data.game.id,
+			player_id: data.player.id,
+			horizontal: true,
+			start_x: 0,
+			start_y: 0,
+			word: '' // Empty word indicates a pass
+		};
+
+		const response = await fetch('/api/move', {
+			method: 'POST',
+			headers: { 'Content-Type': 'application/json' },
+			body: JSON.stringify({ move })
+		});
+
+		if (response.ok) {
+			placedLetters = [];
+			reloadBoardAndScores();
+		} else {
+			console.error('Failed to pass turn');
+		}
+	}
+
 	async function submitMove(): Promise<void> {
 		// TODO: validate move
 
@@ -141,6 +165,11 @@
 
 <div class="flex h-full flex-col gap-4 lg:flex-row">
 	<div class="flex w-full flex-col">
+		{#if data.game.is_finished}
+			<div class="m-4 flex flex-col items-center justify-center">
+				<h1 class="text-2xl">Game finished</h1>
+			</div>
+		{/if}
 		<div class="mb-2 font-bold">Players*:</div>
 		<table class="d-block max-w-96">
 			{#each data.players as player}
@@ -149,8 +178,11 @@
 					<td>{player.user.name}</td>
 					<td><span class="font-bold">{scores.get(player.id) ?? 0}</span></td>
 					<td>
-						{#if player.order_index === data.game.current_player_index}
+						{#if player.order_index === data.game.current_player_index && !data.game.is_finished}
 							({data.player.id === player.id ? 'your' : 'their'} turn)
+						{/if}
+						{#if data.game.is_finished && scores.get(player.id) === data.maxScore}
+							<span class="text-sm">Winner</span>
 						{/if}
 					</td>
 				</tr>
@@ -188,40 +220,52 @@
 		</div>
 	</div>
 </div>
-<div class="bottom-bar fixed bottom-0 left-0 grid min-h-12 w-full gap-4 bg-green-800 p-3">
-	<button
-		class="resetBtn mr-auto rounded-full bg-white p-2 text-black disabled:cursor-not-allowed disabled:bg-gray-400"
-		disabled={placedLetters.length === 0}
-		on:click={resetMove}
-	>
-		Reset move
-	</button>
-	<div class="letters flex justify-center gap-3">
-		{#each playerLetters as letter, index}
-			<button
-				class="relative flex aspect-square h-9 items-center justify-center md:h-12"
-				class:border={selectedLetterIndex == index}
-				class:bg-white={selectedLetterIndex != index}
-				class:bg-black={selectedLetterIndex == index}
-				class:text-white={selectedLetterIndex == index}
-				class:opacity-25={!!placedLetters.find((l) => l.letterIndex === index)}
-				disabled={!!placedLetters.find((l) => l.letterIndex === index)}
-				on:click={() => selectLetter(index)}
-			>
-				{letter.toUpperCase()}
-				<div class="absolute bottom-0 right-0 mr-0.5 text-xs">{getLetterValue(letter)}</div>
-			</button>
-		{/each}
-	</div>
+{#if !data.game.is_finished}
+	<div class="bottom-bar fixed bottom-0 left-0 grid min-h-12 w-full gap-4 bg-green-800 p-3">
+		<button
+			class="resetBtn mr-auto rounded-full bg-white p-2 text-black disabled:cursor-not-allowed disabled:bg-gray-400"
+			disabled={placedLetters.length === 0}
+			on:click={resetMove}
+		>
+			Reset move
+		</button>
+		<div class="letters flex justify-center gap-3">
+			{#each playerLetters as letter, index}
+				<button
+					class="relative flex aspect-square h-9 items-center justify-center md:h-12"
+					class:border={selectedLetterIndex == index}
+					class:bg-white={selectedLetterIndex != index}
+					class:bg-black={selectedLetterIndex == index}
+					class:text-white={selectedLetterIndex == index}
+					class:opacity-25={!!placedLetters.find((l) => l.letterIndex === index)}
+					disabled={!!placedLetters.find((l) => l.letterIndex === index)}
+					on:click={() => selectLetter(index)}
+				>
+					{letter.toUpperCase()}
+					<div class="absolute bottom-0 right-0 mr-0.5 text-xs">{getLetterValue(letter)}</div>
+				</button>
+			{/each}
+		</div>
 
-	<button
-		class="submitBtn ml-auto rounded-full bg-cyan-400 p-2 disabled:cursor-not-allowed disabled:bg-gray-400"
-		disabled={data.player.order_index !== data.game.current_player_index}
-		on:click={submitMove}
-	>
-		Submit move
-	</button>
-</div>
+		{#if placedLetters.length < 1}
+			<button
+				class="submitBtn ml-auto rounded-full bg-cyan-400 p-2 disabled:cursor-not-allowed disabled:bg-gray-400"
+				disabled={data.player.order_index !== data.game.current_player_index}
+				on:click={passMove}
+			>
+				Pass turn
+			</button>
+		{:else}
+			<button
+				class="submitBtn ml-auto rounded-full bg-cyan-400 p-2 disabled:cursor-not-allowed disabled:bg-gray-400"
+				disabled={data.player.order_index !== data.game.current_player_index}
+				on:click={submitMove}
+			>
+				Submit move
+			</button>
+		{/if}
+	</div>
+{/if}
 
 <style>
 	.board {

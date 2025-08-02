@@ -15,7 +15,7 @@
 			class="mx-auto grid w-full grid-cols-1 justify-items-center gap-4 sm:grid-cols-2 lg:grid-cols-3"
 		>
 			{#each data.games as game}
-				<a href="/game/{game.id}" class="w-full max-w-[300px]">
+				<a href="/game/{game.id}" class="w-full max-w-[300px]" class:opacity-50={game.is_finished}>
 					<div class="flex aspect-square w-full flex-col items-center justify-center">
 						<div class="board grid w-full gap-px">
 							{#each game.board.board as tile}
@@ -38,8 +38,15 @@
 						</div>
 					</div>
 					<span
-						>{game.player.length} players, created on {game.created_at.toLocaleDateString()}</span
+						>{game.player.length} players, created {game.created_at.toLocaleDateString(undefined, {
+							year: '2-digit',
+							month: '2-digit',
+							day: '2-digit'
+						})}</span
 					>
+					{#if game.is_finished}
+						<span class="text-xs">(finished)</span>
+					{/if}
 				</a>
 			{/each}
 		</div>

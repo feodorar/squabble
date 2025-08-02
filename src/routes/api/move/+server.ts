@@ -62,14 +62,42 @@ export const POST: RequestHandler = async ({ request }) => {
 		data: { letters: letters }
 	});
 
-	let nextPlayerIndex = player.order_index + 1;
-	if (nextPlayerIndex >= game.player.length) {
-		nextPlayerIndex = 0;
+	let isGameFinished = false;
+
+	// Path 1/2 to finish game: one player emptied their rack and no other tiles left
+	if (letters.length === 0 && allAvailableLetters.length === 0) {
+		isGameFinished = true;
 	}
-	await prisma.game.update({
-		where: { id: game.id },
-		data: { free_letters: allAvailableLetters, current_player_index: nextPlayerIndex }
-	});
+
+	// Path 2/2 to finish game: all player passed their turn twice in a row
+	if (move.word.length === 0) {
+		const moves = await prisma.move.findMany({
+			where: { game_id: game.id }
+		});
+		moves.sort((a, b) => a.created_at.valueOf() - b.created_at.valueOf());
+		const numberOfPlayers = game.player.length;
+		const lastTwoRoundsOfMoves = moves.slice(-(numberOfPlayers * 2));
+		if (lastTwoRoundsOfMoves.every((m) => m.word.length === 0)) {
+			isGameFinished = true;
+		}
+	}
+
+	if (isGameFinished) {
+		await prisma.game.update({
+			where: { id: game.id },
+			data: { is_finished: true }
+		});
+	} else {
+		// update current player index
+		let nextPlayerIndex = player.order_index + 1;
+		if (nextPlayerIndex >= game.player.length) {
+			nextPlayerIndex = 0;
+		}
+		await prisma.game.update({
+			where: { id: game.id },
+			data: { free_letters: allAvailableLetters, current_player_index: nextPlayerIndex }
+		});
+	}
 
 	return json({ playerLetters: letters }, { status: 200 });
 };
