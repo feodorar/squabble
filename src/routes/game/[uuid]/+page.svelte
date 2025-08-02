@@ -161,6 +161,25 @@
 		// invalidateAll(); // TODO: only invalidate this? Maybe change to form action, which would trigger reload
 		// scores = scores;
 	}
+
+	function handleDragStart(event: DragEvent, index: number) {
+		if (event.dataTransfer) {
+			selectLetter(index);
+			event.dataTransfer.effectAllowed = 'move';
+		}
+	}
+
+	function handleDragOver(event: DragEvent) {
+		event.preventDefault(); // Necessary to allow drop
+		if (event.dataTransfer) {
+			event.dataTransfer.dropEffect = 'move'; // Show a move cursor
+		}
+	}
+
+	function handleDrop(event: DragEvent, targetTile: Tile) {
+		event.preventDefault();
+		selectTile(targetTile);
+	}
 </script>
 
 <div class="flex h-full flex-col gap-4 lg:flex-row">
@@ -231,6 +250,8 @@
 					class:bg-cyan-400={tile.special === 'triple-letter'}
 					class:bg-cyan-200={tile.special === 'double-letter'}
 					on:click={() => selectTile(tile)}
+					on:dragover={handleDragOver}
+					on:drop={(e) => handleDrop(e, tile)}
 				>
 					{#if tile.placedLetter}
 						<div
@@ -260,7 +281,8 @@
 		<div class="letters flex justify-center gap-3">
 			{#each playerLetters as letter, index}
 				<button
-					class="relative flex aspect-square h-9 items-center justify-center md:h-12"
+					draggable="true"
+					class=" flex aspect-square h-9 select-none items-center justify-center md:h-12"
 					class:border={selectedLetterIndex == index}
 					class:bg-white={selectedLetterIndex != index}
 					class:bg-black={selectedLetterIndex == index}
@@ -268,9 +290,13 @@
 					class:opacity-25={!!placedLetters.find((l) => l.letterIndex === index)}
 					disabled={!!placedLetters.find((l) => l.letterIndex === index)}
 					on:click={() => selectLetter(index)}
+					on:dragstart={(e) => handleDragStart(e, index)}
+					on:drop={(e) => (selectedLetterIndex = undefined)}
 				>
-					{letter.toUpperCase()}
-					<div class="absolute bottom-0 right-0 mr-0.5 text-xs">{getLetterValue(letter)}</div>
+					<span>{letter.toUpperCase()}</span>
+					<div class="absolute bottom-0 right-0 mr-0.5 text-xs">
+						{getLetterValue(letter)}
+					</div>
 				</button>
 			{/each}
 		</div>
