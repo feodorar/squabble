@@ -282,7 +282,7 @@
 			{#each playerLetters as letter, index}
 				<button
 					draggable="true"
-					class=" flex aspect-square h-9 items-center justify-center md:h-12"
+					class="relative flex aspect-square h-9 items-center justify-center md:h-12"
 					class:border={selectedLetterIndex == index}
 					class:bg-white={selectedLetterIndex != index}
 					class:bg-black={selectedLetterIndex == index}
