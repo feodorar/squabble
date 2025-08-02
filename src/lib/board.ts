@@ -1,4 +1,4 @@
-import type { game, move } from '@prisma/client';
+import type { game, move, player } from '@prisma/client';
 
 export type SpecialTile = 'triple-word' | 'double-word' | 'triple-letter' | 'double-letter';
 export type Tile = {
@@ -122,7 +122,11 @@ function getSpecial(coordinate: Coordinate): SpecialTile | undefined {
 	return special;
 }
 
-export function constructBoardAndScoresForGame(moves: move[]): {
+export function constructBoardAndScoresForGame(
+	moves: move[],
+	players: player[],
+	isFinished: boolean
+): {
 	board: Tile[];
 	scores: Map<string, number>;
 } {
@@ -142,7 +146,44 @@ export function constructBoardAndScoresForGame(moves: move[]): {
 		scores.set(player_id, (scores.get(player_id) ?? 0) + moveScore);
 		// console.log('Move', move.word, 'player', player_id, 'score', moveScore);
 	}
+
+	if (isFinished) {
+		applyEndGameScores(players, scores);
+	}
+
 	return { board, scores };
+}
+
+function applyEndGameScores(players: player[], scores: Map<string, number>): Map<string, number> {
+	// After all the scores are added up, each player’s score is reduced
+	// by the sum of their unplayed tiles, and if one player has used all
+	// their tiles, their score is increased by the sum of the unplayed
+	// tiles of all the other players.
+	// e.g. If Player one has an X and an A left on their rack at the end
+	// of the game, their score is reduced by 9 points. The player who
+	// used all their tiles adds 9 points to their score.
+	let allUnplayedTilesScore = 0;
+	players
+		.filter((p) => p.letters.length > 0)
+		.forEach((player) => {
+			const playerScore = scores.get(player.id) ?? 0;
+			const unplayedTiles = player.letters;
+
+			const unplayedTilesScore = unplayedTiles.reduce(
+				(sum, letter) => sum + getLetterValue(letter),
+				0
+			);
+			scores.set(player.id, playerScore - unplayedTilesScore);
+			allUnplayedTilesScore += unplayedTilesScore;
+		});
+	players
+		.filter((p) => p.letters.length === 0)
+		.forEach((player) => {
+			const playerScore = scores.get(player.id) ?? 0;
+			scores.set(player.id, playerScore + allUnplayedTilesScore);
+		});
+
+	return scores;
 }
 
 function getScoreOfWord(word: Tile[], newlyPlacedTiles: Tile[]): number {
@@ -199,6 +240,10 @@ function placeLettersOfMoveOnBoard(board: Tile[], move: move): Tile[] {
 }
 
 function getWordsForMove(board: Tile[], move: move): Tile[][] {
+	if (move.word.length < 1) {
+		return [];
+	}
+
 	const wordsInMove: Tile[][] = [];
 
 	let moveStart = move.horizontal ? move.start_x : move.start_y;
