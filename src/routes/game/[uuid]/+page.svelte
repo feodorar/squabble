@@ -241,7 +241,7 @@
 	<div
 		class="flex aspect-square w-full flex-col items-center justify-center pb-20 lg:order-1 lg:h-full lg:w-auto lg:pb-0"
 	>
-		<div class="board grid w-full gap-px">
+		<div class="board grid w-full select-none gap-px">
 			{#each board as tile}
 				<button
 					class="w-1/15 lg:h-1/15 flex aspect-square items-center justify-center bg-amber-100 hover:brightness-90 lg:w-auto"
@@ -278,11 +278,11 @@
 		>
 			Reset move
 		</button>
-		<div class="letters flex justify-center gap-3">
+		<div class="letters flex select-none justify-center gap-3">
 			{#each playerLetters as letter, index}
 				<button
 					draggable="true"
-					class=" flex aspect-square h-9 select-none items-center justify-center md:h-12"
+					class=" flex aspect-square h-9 items-center justify-center md:h-12"
 					class:border={selectedLetterIndex == index}
 					class:bg-white={selectedLetterIndex != index}
 					class:bg-black={selectedLetterIndex == index}
