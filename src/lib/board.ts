@@ -129,7 +129,9 @@ export function constructBoardAndScoresForGame(
 ): {
 	board: Tile[];
 	scores: Map<string, number>;
+	scoredMoves: { move: move; score: number }[];
 } {
+	const scoredMoves: { move: move; score: number }[] = [];
 	const scores = new Map<string, number>();
 	const board = getEmptyBoard();
 	moves.sort((m1, m2) => m1.created_at.valueOf() - m2.created_at.valueOf());
@@ -145,13 +147,17 @@ export function constructBoardAndScoresForGame(
 		const player_id = move.player_id;
 		scores.set(player_id, (scores.get(player_id) ?? 0) + moveScore);
 		// console.log('Move', move.word, 'player', player_id, 'score', moveScore);
+		scoredMoves.push({
+			move,
+			score: moveScore
+		});
 	}
 
 	if (isFinished) {
 		applyEndGameScores(players, scores);
 	}
 
-	return { board, scores };
+	return { board, scores, scoredMoves };
 }
 
 function applyEndGameScores(players: player[], scores: Map<string, number>): Map<string, number> {

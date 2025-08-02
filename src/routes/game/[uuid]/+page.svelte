@@ -164,36 +164,64 @@
 </script>
 
 <div class="flex h-full flex-col gap-4 lg:flex-row">
-	<div class="flex w-full flex-col">
+	<div class="flex w-full flex-col lg:order-2">
 		{#if data.game.is_finished}
 			<div class="m-4 flex flex-col items-center justify-center">
 				<h1 class="text-2xl">Game finished</h1>
 			</div>
 		{/if}
 		<div class="mb-2 font-bold">Players*:</div>
-		<table class="d-block max-w-96">
-			{#each data.players as player}
-				<tr class:text-cyan-900={player.order_index === data.game.current_player_index}>
-					<td>{player.order_index + 1}</td>
-					<td>{player.user.name}</td>
-					<td><span class="font-bold">{scores.get(player.id) ?? 0}</span></td>
-					<td>
-						{#if player.order_index === data.game.current_player_index && !data.game.is_finished}
-							({data.player.id === player.id ? 'your' : 'their'} turn)
-						{/if}
-						{#if data.game.is_finished && scores.get(player.id) === data.maxScore}
-							<span class="text-sm">Winner</span>
-						{/if}
-					</td>
-				</tr>
-			{/each}
-		</table>
+
+		{#each data.players as player}
+			<div
+				class="inline-flex w-[90%] max-w-96 gap-3"
+				class:text-cyan-900={player.order_index === data.game.current_player_index}
+			>
+				<div>
+					{player.order_index + 1}
+				</div>
+				<div class="grow truncate">
+					<span>{player.user.name}</span>
+					{#if player.order_index === data.game.current_player_index && !data.game.is_finished}
+						({data.player.id === player.id ? 'your' : 'their'} turn)
+					{/if}
+					{#if data.game.is_finished && scores.get(player.id) === data.maxScore}
+						<span class="text-sm">Winner</span>
+					{/if}
+				</div>
+				<div>
+					<span class="font-bold">{scores.get(player.id) ?? 0}</span>
+				</div>
+			</div>
+		{/each}
+
+		<details class="my-4 overflow-hidden">
+			<summary>View game history</summary>
+			<div class="grid h-full max-w-96 grid-cols-5 gap-x-3 overflow-auto pb-8 text-xs">
+				{#each data.scoredMoves as scoredMove}
+					<div class="col">
+						{scoredMove.move.created_at.toLocaleDateString(undefined, {
+							year: '2-digit',
+							month: '2-digit',
+							day: '2-digit'
+						})}
+					</div>
+					<div class="col-span-2 truncate">
+						{data.players.find((p) => p.id === scoredMove.move.player_id)?.user.name}
+					</div>
+					<div class="col">{scoredMove.move.word || '(passed)'}</div>
+					<div class="col font-bold">{scoredMove.score}</div>
+				{/each}
+			</div>
+		</details>
 
 		<div class="mb-4 mt-2 text-xs lg:mt-auto">
 			*To invite more players, just send them the current url.
 		</div>
 	</div>
-	<div class="flex aspect-square w-full flex-col items-center justify-center lg:h-full lg:w-auto">
+	<div
+		class="flex aspect-square w-full flex-col items-center justify-center pb-20 lg:order-1 lg:h-full lg:w-auto lg:pb-0"
+	>
 		<div class="board grid w-full gap-px">
 			{#each board as tile}
 				<button
