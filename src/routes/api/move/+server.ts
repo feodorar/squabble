@@ -75,7 +75,7 @@ export const POST: RequestHandler = async ({ request }) => {
 			where: { game_id: game.id }
 		});
 		moves.sort((a, b) => a.created_at.valueOf() - b.created_at.valueOf());
-		const numberOfPlayers = game.player.length + 1;
+		const numberOfPlayers = game.player.length;
 		const lastTwoRoundsOfMoves = moves.slice(-(numberOfPlayers * 2));
 		if (lastTwoRoundsOfMoves.every((m) => m.word.length === 0)) {
 			isGameFinished = true;
